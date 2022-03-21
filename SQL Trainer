@@ -1,0 +1,267 @@
+#T1
+SELECT nimi FROM Elokuvat;
+
+#T2
+SELECT nimi, vuosi FROM Elokuvat;
+
+#T3
+SELECT nimi FROM Elokuvat WHERE vuosi=1940;
+
+#T4
+SELECT nimi FROM Elokuvat WHERE vuosi<1950;
+
+#T5
+SELECT nimi FROM Elokuvat WHERE vuosi BETWEEN 1940 AND 1950;
+
+#T6
+SELECT nimi FROM Elokuvat WHERE vuosi<1950 OR vuosi>1980;
+
+#T7
+SELECT nimi FROM Elokuvat WHERE vuosi!=1940;
+
+#T8
+SELECT nimi FROM Elokuvat ORDER BY nimi;
+
+#T9
+SELECT nimi FROM Elokuvat ORDER BY nimi DESC;
+
+#T10
+SELECT nimi, vuosi FROM Elokuvat ORDER BY vuosi DESC, nimi;
+
+#T11
+SELECT DISTINCT etunimi FROM Nimet;
+
+#T12
+SELECT DISTINCT etunimi, sukunimi FROM Nimet;
+
+#T13
+SELECT COUNT(*) FROM Tyontekijat;
+
+#T14
+SELECT COUNT(*) FROM Tyontekijat WHERE palkka>2000;
+
+#15
+SELECT SUM(palkka) FROM Tyontekijat;
+
+#T16
+SELECT MAX(palkka) FROM Tyontekijat;
+
+#T17
+SELECT COUNT(DISTINCT yritys) FROM Tyontekijat;
+
+#T18
+SELECT yritys, COUNT(*) FROM Tyontekijat GROUP BY yritys;
+
+#T19
+SELECT yritys, MAX(palkka) FROM Tyontekijat GROUP BY yritys;
+
+#T20
+SELECT yritys, MAX(palkka) FROM Tyontekijat GROUP BY yritys HAVING MAX(palkka)>=5000;
+
+#T21
+SELECT P.nimi, T.tulos FROM Pelaajat P, Tulokset T WHERE P.id=T.pelaaja_id;
+
+#T22
+SELECT P.nimi, T.tulos FROM Pelaajat AS P, Tulokset AS T WHERE P.id=T.pelaaja_id AND P.nimi='Uolevi';
+
+#T23
+SELECT P.nimi, T.tulos FROM Pelaajat P, Tulokset T WHERE P.id=T.pelaaja_id AND T.tulos>250;
+
+#T24
+SELECT P.nimi, T.tulos FROM Pelaajat P, Tulokset T WHERE P.id=T.pelaaja_id ORDER BY T.tulos DESC, P.nimi;
+
+#25
+SELECT P.nimi, MAX(T.tulos) FROM Pelaajat P, Tulokset T WHERE P.id=T.pelaaja_id GROUP BY P.id;
+
+#26
+SELECT P.nimi, COUNT(T.tulos) FROM Pelaajat P, Tulokset T WHERE P.id=T.pelaaja_id GROUP BY P.id;
+
+#T27
+SELECT O.nimi, K.nimi, S.arvosana FROM Opiskelijat O, Kurssit K, Suoritukset S WHERE O.id=S.opiskelija_id AND K.id=S.kurssi_id;
+
+#28
+SELECT K.nimi, S.arvosana FROM Opiskelijat O, Kurssit K, Suoritukset S WHERE O.id=S.opiskelija_id AND K.id=S.kurssi_id AND O.nimi='Uolevi';
+
+#29
+SELECT O.nimi, S.arvosana FROM Opiskelijat O, Kurssit K, Suoritukset S WHERE O.id=S.opiskelija_id AND K.id=S.kurssi_id AND K.nimi='Ohpe';
+
+#T30
+SELECT O.nimi, K.nimi, S.arvosana FROM Opiskelijat O, Kurssit K, Suoritukset S WHERE O.id=S.opiskelija_id AND K.id=S.kurssi_id AND S.arvosana BETWEEN 4 AND 5;
+
+#T31
+SELECT O.nimi, COUNT(*) FROM Opiskelijat O, Suoritukset S WHERE O.id=S.opiskelija_id GROUP BY O.id;
+
+#T32
+SELECT O.nimi, MAX(S.arvosana) FROM Opiskelijat O, Suoritukset S WHERE O.id=S.opiskelija_id GROUP BY O.id;
+
+#T33
+SELECT A.nimi, B.nimi FROM Kaupungit A, Kaupungit B, Lennot L WHERE L.mista_id=A.id AND L.minne_id=B.id;
+
+#T34
+SELECT B.nimi FROM Kaupungit A, Kaupungit B, Lennot L WHERE L.mista_id=A.id AND L.minne_id=B.id AND A.nimi='Helsinki';
+
+#T35
+SELECT P.nimi, COUNT(T.tulos) FROM Pelaajat P LEFT JOIN Tulokset T ON P.id=T.pelaaja_id GROUP BY P.id;
+
+#T36
+SELECT O.nimi, COUNT(S.arvosana) FROM Opiskelijat O LEFT JOIN Suoritukset S ON O.id=S.opiskelija_id GROUP BY O.id;
+
+#T37
+SELECT K.nimi, COUNT(S.arvosana) FROM Kurssit K LEFT JOIN Suoritukset S ON K.id=S.kurssi_id GROUP BY K.id;
+
+#T38
+SELECT DISTINCT K.nimi FROM Kurssit K, Suoritukset S WHERE K.id=S.kurssi_id;
+
+#T39
+SELECT K.nimi FROM Kurssit K LEFT JOIN Suoritukset S ON K.id=S.kurssi_id GROUP BY K.id HAVING COUNT(S.arvosana)=0;
+
+#T40
+SELECT K.nimi, COUNT(L.minne_id) FROM Kaupungit K LEFT JOIN Lennot L ON K.id=L.mista_id GROUP BY K.id;
+
+#T41
+SELECT nimi, hinta*2 FROM Tuotteet;
+
+#T42
+SELECT nimi, hinta FROM Tuotteet WHERE hinta%2=0;
+
+#T43
+SELECT sana, LENGTH(sana) FROM Sanat;
+
+#T44
+SELECT sana FROM Sanat WHERE LENGTH(sana)<6;
+
+#T45
+SELECT sana FROM Sanat ORDER BY LENGTH(sana), sana;
+
+#T46
+SELECT etunimi || ' ' || sukunimi FROM Kayttajat;
+
+#T47
+SELECT SUM(LENGTH(sana)) FROM Sanat;
+
+#T48
+SELECT tuote, hinta*maara FROM Tilaukset;
+
+#T49
+SELECT SUM(hinta*maara) FROM Tilaukset;
+
+#T50
+SELECT nimi FROM Elokuvat WHERE vuosi%4=0 AND (vuosi%100<>0 OR vuosi%400=0);
+
+#T51
+SELECT nimi FROM Tuotteet WHERE hinta=(SELECT MIN(hinta) FROM Tuotteet);
+
+#T52
+SELECT nimi FROM Tuotteet WHERE hinta <= 2*(SELECT MIN(hinta) FROM Tuotteet);
+
+#T53
+SELECT nimi FROM Tuotteet WHERE hinta IN (SELECT hinta FROM Tuotteet GROUP BY hinta HAVING COUNT(*)=1);
+
+#T54
+SELECT MIN(sana) FROM Sanat;
+
+#T55
+SELECT sana FROM Sanat ORDER BY sana LIMIT 1 OFFSET 1;
+
+#T56
+SELECT sana FROM Sanat ORDER BY sana LIMIT (SELECT COUNT(*)-1 FROM Sanat) OFFSET 1;
+
+#T57
+SELECT sana FROM Sanat WHERE sana LIKE '%i%';
+
+#T58
+SELECT sana FROM Sanat WHERE sana LIKE 'a%';
+
+#T59
+SELECT sana FROM Sanat WHERE sana LIKE '_p___';
+
+#T60
+SELECT sana FROM Sanat WHERE sana LIKE '%a%a%' AND sana NOT LIKE '%a%a%a%';
+
+#T61
+SELECT K.tunnus, COUNT(O.ryhma_id) FROM Kayttajat K LEFT JOIN Oikeudet O ON K.id=O.kayttaja_id GROUP BY K.id;
+
+#T62
+SELECT R.nimi, COUNT(O.kayttaja_id) FROM Ryhmat R LEFT JOIN Oikeudet O ON R.id=O.ryhma_id GROUP BY R.id;
+
+#T63
+SELECT K.tunnus FROM Kayttajat K LEFT JOIN Oikeudet O ON K.id=O.kayttaja_id GROUP BY K.id HAVING COUNT(O.ryhma_id) > 1;
+
+#T64
+SELECT DISTINCT A.tunnus FROM Kayttajat A, Kayttajat B, Oikeudet X, Oikeudet Y WHERE A.id=X.kayttaja_id AND B.id=Y.kayttaja_id AND X.ryhma_id=Y.ryhma_id AND B.tunnus='uolevi';
+
+#T65
+SELECT tunnus FROM Kayttajat WHERE tunnus NOT IN (SELECT A.tunnus FROM Kayttajat A, Kayttajat B, Oikeudet X, Oikeudet Y WHERE A.id=X.kayttaja_id AND B.id=Y.kayttaja_id AND X.ryhma_id=Y.ryhma_id AND B.tunnus='uolevi');
+
+#T66
+SELECT sana FROM Sanat ORDER BY LOWER(sana);
+
+#T67
+SELECT nimi, hinta FROM Tuotteet ORDER BY hinta, nimi LIMIT 1;
+
+#T68
+SELECT A.nimi, COUNT(*) FROM Tuotteet A, Tuotteet B WHERE ABS(A.hinta-B.hinta) <= 1 GROUP BY A.id;
+
+#T69
+SELECT COUNT(*) FROM Tuotteet A, Tuotteet B WHERE A.hinta+B.hinta=10 AND A.id <= B.id;
+
+#T70
+SELECT MIN(ABS(A.hinta-B.hinta)) FROM Tuotteet A, Tuotteet B WHERE A.id<>B.id;
+
+#T71
+SELECT A.haltija, IFNULL(SUM(B.muutos),0) FROM Tilit A LEFT JOIN Tapahtumat B ON A.id=B.tili_id GROUP BY A.id;
+
+#T72
+SELECT SUM(B.muutos) FROM Tilit T, Tapahtumat A, Tapahtumat B WHERE A.tili_id=T.id AND B.tili_id=T.id AND T.haltija="Uolevi" AND B.id<=A.id GROUP BY A.id;
+
+#T73
+SELECT haltija, IFNULL((SELECT MAX((SELECT SUM(muutos) FROM Tapahtumat WHERE tili_id=B.id AND id <= A.id)) FROM Tapahtumat A),0) FROM Tilit B;
+
+#T74
+SELECT O.nimi, COUNT(DISTINCT L.tehtava_id) FROM Opiskelijat O LEFT JOIN Lahetykset L ON O.id=L.opiskelija_id AND L.tila=1 GROUP BY O.id;
+
+#T76
+SELECT tulos FROM Tulokset GROUP BY tulos ORDER BY COUNT(*) DESC, tulos LIMIT 1;
+
+#T77
+SELECT tulos FROM Tulokset ORDER BY tulos LIMIT 1 OFFSET (SELECT COUNT(*)/2 FROM Tulokset);
+
+#T78
+SELECT tulos FROM Tulokset ORDER BY tulos LIMIT 1 OFFSET (SELECT (COUNT(*)-1)/2 FROM Tulokset);
+
+#T79
+SELECT V.nimi, COUNT(M.id) FROM Vaunut V LEFT JOIN Matkustajat M ON V.id=M.vaunu_id GROUP BY V.id;
+
+#T80
+SELECT V.nimi, V.paikat-COUNT(M.id) FROM Vaunut V LEFT JOIN Matkustajat M ON V.id=M.vaunu_id GROUP BY V.id;
+
+#T81
+SELECT (SELECT SUM(paikat) FROM vaunut)-(SELECT COUNT(*) FROM Matkustajat);
+
+#T82
+SELECT A.nimi, COUNT(*)-1 FROM Matkustajat A, Matkustajat B WHERE A.vaunu_id=B.vaunu_id GROUP BY A.id;
+
+#T83
+SELECT A.nimi FROM Matkustajat A, Matkustajat B WHERE A.vaunu_id=B.vaunu_id GROUP BY A.id HAVING COUNT(*)=1;
+
+#T84
+SELECT V.nimi FROM Vaunut V LEFT JOIN Matkustajat M ON V.id=M.vaunu_id GROUP BY V.id HAVING COUNT(M.id)=0;
+
+#T85
+SELECT COUNT(*) FROM Matkustajat A, Matkustajat B WHERE A.id<B.id AND A.vaunu_id=B.vaunu_id;
+
+#T90
+SELECT ROW_NUMBER() OVER (ORDER BY MAX(T.tulos) DESC, P.nimi), P.nimi, MAX(T.tulos) FROM Pelaajat P, Tulokset T WHERE P.id=T.pelaaja_id GROUP BY P.id;
+
+#T91
+SELECT RANK() OVER (ORDER BY MAX(T.tulos) DESC) r, P.nimi, MAX(T.tulos) FROM Pelaajat P, Tulokset T WHERE P.id=T.pelaaja_id GROUP BY P.id ORDER BY r, P.nimi;
+
+#T94
+SELECT A.nimi, SUM(IFNULL((SELECT SUM(C.kaveri_id=D.kaveri_id) FROM Kaverit C, Kaverit D ON C.kayttaja_id=A.id AND D.kayttaja_id=B.id),0)=(SELECT COUNT(*) FROM Kaverit X WHERE X.kayttaja_id=A.id))-1 FROM Kayttajat A, Kayttajat B GROUP BY A.id;
+
+#T96
+SELECT nimi, 2-(ROW_NUMBER() OVER (ORDER BY nimi))%2 FROM Pelaajat;
+
+#T97
+SELECT nimi, CASE WHEN (ROW_NUMBER() OVER (ORDER BY nimi))%2=1 THEN 'Puput' ELSE 'Kilit' END FROM Pelaajat;
+
