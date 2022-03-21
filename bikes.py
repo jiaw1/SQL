@@ -26,3 +26,4 @@ def trips_on_each_day(city):
 def most_popular_start(city):
     popular = db.execute("SELECT S.name, COUNT(T.from_id) AS count FROM Stops S, Cities C, Trips T WHERE S.city_id = C.id and S.id=T.from_id and C.name=? GROUP BY S.name ORDER BY count DESC LIMIT 1", [city]).fetchall()
     return popular
+
