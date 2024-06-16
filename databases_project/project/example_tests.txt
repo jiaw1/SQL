@@ -1,0 +1,490 @@
+Use case 1: processing a customer's order
+
+CREATE TABLE Store ( 
+storeID TEXT NOT NULL, 
+name TEXT NOT NULL, 
+location TEXT NOT NULL, 
+PRIMARY KEY (storeID) 
+); 
+
+CREATE TABLE InStore ( 
+productID TEXT NOT NULL, 
+storeID TEXT NOT NULL, 
+PRIMARY KEY (productID, storeID) 
+FOREIGN KEY (productID) REFERENCES Product(productID), 
+FOREIGN KEY (storeID) REFERENCES Store(storeID)
+); 
+
+CREATE TABLE Customer ( 
+customerID TEXT NOT NULL, 
+name TEXT, 
+address TEXT, 
+postalCode INTEGER, 
+phone INTEGER, 
+email TEXT, 
+PRIMARY KEY (customerID) 
+); 
+
+CREATE TABLE Orders ( 
+orderID TEXT NOT NULL, 
+totalPrice REAL CHECK (totalPrice >= 0), 
+date DATE NOT NULL, 
+status TEXT NOT NULL CHECK (status IN ('pending', 'completed', 'cancelled')), 
+PRIMARY KEY (orderID) 
+); 
+
+CREATE TABLE Product ( 
+productID TEXT NOT NULL, 
+name TEXT NOT NULL, 
+price REAL CHECK (price >= 0), 
+energy REAL CHECK (energy >= 0), 
+fat REAL CHECK (fat >= 0), 
+carbs REAL CHECK (carbs >= 0), 
+proteins REAL CHECK (proteins >= 0), 
+storage TEXT CHECK (storage IN ('room', 'refrigerator', 'freezer')), 
+PRIMARY KEY (productID) 
+); 
+
+CREATE TABLE CountInfo ( 
+orderID TEXT NOT NULL, 
+productID TEXT NOT NULL, 
+count INTEGER, 
+weight INTEGER, 
+FOREIGN KEY (orderID) REFERENCES Orders(orderID), 
+FOREIGN KEY (productID) REFERENCES Product(productID),
+PRIMARY KEY (orderID, productID) 
+);
+
+CREATE TABLE BelongsTo ( 
+productID TEXT NOT NULL, 
+orderID TEXT NOT NULL, 
+PRIMARY KEY (productID, orderID) 
+FOREIGN KEY (productID) REFERENCES Product(productID), 
+FOREIGN KEY (orderID) REFERENCES Orders(orderID), 
+);
+
+The customer places an order that must be added to the system. 
+The products are collected in the warehouse.
+Create a store and add products there
+
+INSERT INTO Store(storeID, name, location)
+VALUES('ST04', 'Otaniemi ', 'Espoo');
+
+INSERT INTO Product(productID, name, price, energy, fat, carbs, proteins, storage) 
+VALUES ('PROD01', 'fish', 10, 413, 3, 0, 18, 'freezer'); 
+
+INSERT INTO Product(productID, name, price, energy, fat, carbs, proteins, storage) 
+VALUES('PROD02', 'apple', 2, 50, 4, 4, 5, 'room');
+
+INSERT INTO InStore(productID, storeID)
+VALUES('PROD01', 'ST04');
+
+INSERT INTO InStore(productID, storeID)
+VALUES('PROD02', 'ST04');
+
+Select products in store ST01
+
+SELECT PD.productID, PD.name, PD.price
+FROM Product PD
+JOIN InStore InS ON PD.productID = InS.productID
+WHERE InS.storeID = 'ST01';
+
+Create a customer who places an order
+
+INSERT INTO Customer(customerID, name, address, postalCode, phone, email) 
+VALUES ('CUST01', 'Teemu Teekkari', 'Otaniemi 1', '02150', '0451234567', 
+'teemu.teekkari@aalto.fi');
+
+INSERT INTO Orders (orderID, date, status, totalPrice) 
+VALUES ('ORD01', '2024-05-02', 'pending', 0.0);
+
+INSERT INTO OrderBy (orderID, customerID)
+VALUES ('ORD01', 'CUST01');
+
+Select customer's contact information
+
+SELECT name, address, phone, email FROM Customer
+WHERE customerID = 'CUST01';
+
+Add ordered products to customer's order
+
+INSERT INTO BelongsTo (orderID, productID) 
+VALUES ('ORD01', 'PROD01');
+
+INSERT INTO BelongsTo (orderID, productID) 
+VALUES('ORD01', 'PROD02');
+
+Add order quantity and weight
+
+INSERT INTO CountInfo (orderID, productID, count, weight)
+VALUES ('ORD01', 'PROD02', 2, 50);
+
+INSERT INTO CountInfo (orderID, productID, count, weight)
+VALUES('ORD01', 'PROD05', 1, 500);
+
+Update total price of order
+
+UPDATE Orders
+SET totalPrice = (
+ SELECT SUM(PD.price * CI.count)
+ FROM Product PD
+ JOIN BelongsTo BT ON PD.productID = BT.productID
+ JOIN CountInfo CI ON BT.productID = CI.productID AND BT.orderID = CI.orderID
+ WHERE BT.orderID = 'ORD01'
+)
+WHERE orderID = 'ORD01';
+
+List all products of customer's order and their prices
+
+SELECT PD.name, PD.price, CI.count 
+FROM Product PD 
+JOIN CountInfo CI ON PD.productID = CI.productID 
+WHERE CI.orderID = 'ORD01';
+Tarkastellaan tilausta tältä päivältä
+SELECT * FROM Orders O
+WHERE O.date = '2024-05-02'
+
+Use case 2: delivery scheduling and management
+
+CREATE TABLE Collector ( 
+collectorID TEXT NOT NULL, 
+name TEXT, 
+phone INTEGER, 
+ordersPerHour INTEGER, 
+PRIMARY KEY (collectorID) 
+); 
+
+CREATE TABLE Pack ( 
+packID TEXT NOT NULL, 
+temperature REAL, 
+PRIMARY KEY (packID) 
+); 
+
+CREATE TABLE postalCode ( 
+postalCode TEXT NOT NULL, 
+PRIMARY KEY (postalCode) 
+); 
+
+CREATE TABLE TimeSlot ( 
+timeSlotID TEXT NOT NULL, 
+date DATE, 
+startTime TIME, 
+endTime TIME, 
+duration INTEGER, 
+PRIMARY KEY (timeSlotID) 
+); 
+
+CREATE TABLE Delivery ( 
+deliveryID TEXT NOT NULL, 
+date DATE, 
+startTime TIME, 
+endTime TIME, 
+capacity INTEGER, 
+PRIMARY KEY (deliveryID) 
+);
+
+CREATE TABLE DeliveryRoute ( 
+deliveryRouteID TEXT NOT NULL, 
+capacity INTEGER, 
+PRIMARY KEY (deliveryRouteID) 
+);
+
+CREATE TABLE Schedules ( 
+scheduleID TEXT NOT NULL, 
+weekday TEXT, 
+startTime TIME, 
+endTime TIME, 
+PRIMARY KEY (scheduleID) 
+); 
+
+CREATE TABLE Owns ( 
+deliveryRouteID TEXT NOT NULL, 
+storeID TEXT, 
+FOREIGN KEY (deliveryRouteID) REFERENCES DeliveryRoute(deliveryRouteID), 
+FOREIGN KEY (storeID) REFERENCES Store(storeID), 
+PRIMARY KEY (deliveryRouteID, storeID) 
+); 
+
+CREATE TABLE WorksIn ( 
+collectorID TEXT NOT NULL, 
+timeslotID TEXT NOT NULL, 
+FOREIGN KEY (collectorID) REFERENCES Collector(collectorID), 
+FOREIGN KEY (timeslotID) REFERENCES TimeSlot(timeSlotID), 
+PRIMARY KEY (collectorID, timeslotID) 
+); 
+
+CREATE TABLE PackedIn ( 
+orderID TEXT NOT NULL, 
+packID TEXT NOT NULL, 
+FOREIGN KEY (orderID) REFERENCES Orders(orderID), 
+FOREIGN KEY (packID) REFERENCES Pack(packID), 
+PRIMARY KEY (orderID, packID) 
+); 
+
+CREATE TABLE Has ( 
+deliveryID TEXT NOT NULL, 
+deliveryRouteID TEXT NOT NULL, 
+FOREIGN KEY (deliveryID) REFERENCES Delivery(deliveryID), 
+FOREIGN KEY (deliveryRouteID) REFERENCES DeliveryRoute(deliveryRouteID),
+PRIMARY KEY (deliveryID, deliveryRouteID)
+); 
+
+CREATE TABLE Includes ( 
+deliveryRouteID TEXT NOT NULL, 
+postalCode TEXT NOT NULL, 
+FOREIGN KEY (deliveryRouteID) REFERENCES DeliveryRoute(deliveryRouteID), 
+FOREIGN KEY (postalCode) REFERENCES PostalCode(postalCode), 
+PRIMARY KEY (deliveryRouteID, postalCode) 
+); 
+
+CREATE TABLE AssignedTo ( 
+orderID TEXT NOT NULL, 
+deliveryID TEXT NOT NULL, 
+FOREIGN KEY (orderID) REFERENCES Orders(orderID), 
+FOREIGN KEY (deliveryID) REFERENCES Delivery(deliveryID), 
+PRIMARY KEY (orderID, deliveryID) 
+);
+
+Check delivery schedules and add new delivery times
+Create a collector and a working time for it
+
+INSERT INTO Collector(collectorID, name, phone, ordersPerHour) 
+VALUES('COL01', 'John Doe', 0401234567, 2); 
+
+INSERT INTO TimeSlot (timeSlotID, date, startTime, endTime, duration)
+VALUES ('TS01', '2024-05-02', '08:00', '12:00', 4);
+
+INSERT INTO TimeSlot (timeSlotID, date, startTime, endTime, duration)
+VALUES ('TS02', '2024-05-03', '12:00', '14:00', 2);
+
+INSERT INTO TimeSlot (timeSlotID, date, startTime, endTime, duration)
+VALUES ('TS03', '2024-05-04', '08:00', '10:00', 2);
+
+INSERT INTO WorksIn(collectorID, timeslotID)
+VALUES ('COL01', 'TS01');
+
+INSERT INTO WorksIn(collectorID, timeslotID)
+VALUES ('COL01', 'TS02');
+
+INSERT INTO WorksIn(collectorID, timeslotID)
+VALUES ('COL01', 'TS03');
+
+Select collectors' morning shifts (between 8 am and 12 pm) in May 2024
+
+SELECT C.collectorID, C.name, TS.date, TS.startTime, TS.endTime, TS.duration
+FROM Collector C
+JOIN WorksIn WIn ON C.collectorID = WIn.collectorID
+JOIN TimeSlot TS ON TS.timeSlotID = WIn.timeSlotID
+WHERE TS.date BETWEEN '2024-05-01' AND '2024-05-31'
+AND TS.startTime >= '08:00' 
+AND TS.startTime < '12:00';
+
+Add the delivery route and its capacity
+
+INSERT INTO DeliveryRoute (deliveryRouteID, capacity)
+VALUES ('01', 20);
+
+INSERT INTO Delivery (deliveryID, date, startTime, endTime, capacity)
+VALUES ('DEL01', '2024-05-03', '14:00', '18:00', 20);
+
+INSERT INTO postalCode(postalCode)
+VALUES('02150');
+
+INSERT INTO Includes (deliveryRouteID, postalCode)
+VALUES ('DR01', '02150');
+
+INSERT INTO Owns(deliveryRouteID, storeID)
+VALUES ('DR01', 'ST01');
+
+Select delivery routes owned by store ST01
+
+SELECT O.storeID, DR.deliveryRouteID, DR.capacity
+FROM Owns O
+JOIN DeliveryRoute DR ON O.deliveryRouteID = DR.deliveryRouteID;
+
+Add customer's order to delivery route
+Set a storage requirement for the transport
+
+INSERT INTO AssignedTo (orderID, deliveryID)
+VALUES ('ORD01', 'DEL01');
+
+INSERT INTO Pack(packID, temperature)
+VALUES('PACK01', 8.0);
+
+INSERT INTO PackedIn(orderID, packID)
+VALUES('ORD01', 'PACK01');
+
+Select how the customer's product should be handled during delivery
+
+SELECT O.orderID, Pack.packID, Pack.temperature
+FROM Orders O
+JOIN PackedIn PI ON O.orderID = PI.orderID
+JOIN Pack ON PI.packID = Pack.packID
+WHERE O.orderID = 'ORD01';
+
+Update order status
+
+UPDATE Orders
+SET status = 'Completed'
+WHERE orderID = 'ORD01';
+Tarkastellaan tilaukseen kerätyt tuotteet
+SELECT PD.name, BT.orderID, O.status FROM Product PD
+JOIN BelongsTo BT ON PD.productID = BT.productID
+JOIN Orders O ON BT.orderID = O.orderID
+WHERE BT.orderID = 'ORD01';
+
+Add a new delivery time
+
+INSERT INTO Delivery (deliveryID, date, startTime, endTime, capacity) 
+VALUES ('DEL03', '2024-05-05', '15:00', '17:00', 2);
+
+INSERT INTO Delivery (deliveryID, date, startTime, endTime, capacity) 
+VALUES ('DEL04', '2024-05-05', '09:00', '12:00', 3);
+
+Upgrade delivery DEL03 capacity
+
+UPDATE Delivery SET capacity = 4
+WHERE deliveryID = 'DEL03';
+
+Cancel the morning delivery from 05.05.2024
+
+DELETE FROM Delivery WHERE deliveryID = 'DEL04';
+
+Use case 3: searching for products and their reduced prices
+
+CREATE TABLE Price ( 
+priceID TEXT NOT NULL, 
+price REAL NOT NULL CHECK (price >= 0), 
+discountPrice REAL CHECK (discountPrice >= 0), 
+startDate DATE, 
+endDate DATE, 
+PRIMARY KEY (priceID) 
+); 
+
+CREATE TABLE Costs ( 
+productID TEXT NOT NULL, 
+priceID TEXT NOT NULL, 
+FOREIGN KEY (productID) REFERENCES Product(productID), 
+FOREIGN KEY (priceID) REFERENCES Price(priceID), 
+PRIMARY KEY (productID, priceID) 
+);
+
+The customer wants to know which products are on sale
+Add a discount price to the product during the campaign
+
+INSERT INTO Price(priceID, price, discountPrice, startDate, endDate)
+VALUES ('PRI01', 10, 8, '2024-05-05', '2024-05-10');
+
+INSERT INTO Price(priceID, price, discountPrice, startDate, endDate)
+VALUES ('PRI03', 3, 2.5, '2024-05-01', '2024-05-05');
+
+INSERT INTO Price(priceID, price)
+VALUES ('PRI02', 2);
+
+INSERT INTO Price(priceID, price)
+VALUES ('PRI04', 2);
+
+INSERT INTO Costs(productID, priceID)
+VALUES('PROD01', 'PRI01');
+
+INSERT INTO Costs(productID, priceID)
+VALUES('PROD03', 'PRI03');
+
+INSERT INTO Costs(productID, priceID)
+VALUES('PROD02', 'PRI02');
+
+INSERT INTO Costs(productID, priceID)
+VALUES('PROD04', 'PRI04');
+
+INSERT INTO InStore(productID, storeID)
+VALUES('PROD03', 'ST01');
+
+Select products that are currently on sale
+
+SELECT P.name, P.productID, C.priceID, PR.price, PR.discountPrice
+FROM Product P
+JOIN Costs C ON P.productID = C.productID
+JOIN Price PR ON C.priceID = PR.priceID
+WHERE PR.startDate <= CURRENT_DATE AND PR.endDate >= CURRENT_DATE;
+
+View the price history of all products
+
+SELECT PD.name, PR.priceID, PR.price, PR.discountPrice, PR.startDate, PR.endDate
+FROM Product PD
+LEFT JOIN Costs C ON PD.productID = C.productID
+LEFT JOIN Price PR ON C.priceID = PR.priceID
+ORDER BY PD.name, PR.startDate;
+
+Use case 4: management and reporting of special diet products
+
+CREATE TABLE SpecialDietGroup ( 
+groupID TEXT NOT NULL, 
+groupName TEXT NOT NULL, 
+PRIMARY KEY (groupID) 
+); 
+
+CREATE TABLE IsSpecialDiet ( 
+productID TEXT NOT NULL, 
+groupID TEXT NOT NULL, 
+FOREIGN KEY (productID) REFERENCES Product(productID), 
+FOREIGN KEY (groupID) REFERENCES SpecialDietGroup(groupID), 
+PRIMARY KEY (productID, groupID) 
+); 
+
+CREATE TABLE ProductIngredient ( 
+ingredientID TEXT NOT NULL, 
+ingredientName TEXT NOT NULL, 
+ingredientOrder INTEGER, 
+PRIMARY KEY (ingredientID) 
+); 
+
+Manage products that belong to special diets
+A report is created on the nutritional values ​​of products for different diets
+Create products belonging to the lactose-free special diet group
+
+INSERT INTO SpecialDietGroup(groupID, groupName)
+VALUES('SPEC01', 'lactose free');
+
+INSERT INTO SpecialDietGroup(groupID, groupName)
+VALUES('SPEC02', 'gluten free');
+
+INSERT INTO IsSpecialDiet (productID, groupID)
+VALUES('PROD05', 'SPEC01');
+
+INSERT INTO IsSpecialDiet (productID, groupID)
+VALUES('PROD06', 'SPEC01');
+
+INSERT INTO IsSpecialDiet (productID, groupID)
+VALUES('PROD04', 'SPEC02');
+
+INSERT INTO IsSpecialDiet (productID, groupID)
+VALUES('PROD05', 'SPEC02');
+
+Select all nutrition facts for products that are lactose-free
+
+SELECT PD.name, PD.energy, PD.fat, PD.carbs, PD.proteins, SDG.groupName 
+FROM Product PD 
+JOIN IsSpecialDiet IsSD ON PD.productID = IsSD.productID 
+JOIN SpecialDietGroup SDG ON IsSD.groupID = SDG.groupID 
+WHERE SDG.groupName = 'lactose free';
+
+Report average nutrient values ​​for each specific diet
+
+SELECT SDG.groupName, AVG(PD.energy), AVG(PD.fat), AVG(PD.carbs), 
+AVG(PD.proteins) 
+FROM Product PD 
+JOIN IsSpecialDiet IsSD ON PD.productID = IsSD.productID 
+JOIN SpecialDietGroup SDG ON IsSD.groupID = SDG.groupID 
+GROUP BY SDG.groupName;
+
+Select all gluten-free products with a price of less than 3 in a certain store, e.g. store ST01
+
+SELECT PD.name, PD.price, PD.energy, PD.fat, PD.carbs, PD.proteins, 
+SDG.groupName
+FROM Product PD
+JOIN StoreProducts SP ON PD.productID = SP.productID
+JOIN IsSpecialDiet ISD ON PD.productID = ISD.productID
+JOIN SpecialDietGroup SDG ON ISD.groupID = SDG.groupID
+WHERE SP.storeID = 'ST01' 
+AND SDG.groupName = 'gluten free'
+AND PD.price < 3;
